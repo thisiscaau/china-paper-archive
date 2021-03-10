@@ -1,0 +1,199 @@
+# Bài toán RMQ và LCA  
+translation by thisiscaau
+
+#Table of contents :
+    1. Lý thuyết
+    2. Giai thuật
+    3. Ứng dụng
+
+1. LÝ THUYẾT
+(*) Bài toán - Khái niệm cơ bản: 
+-LCA : Lowest Common Ancestor
+-lca(T,u,v) : query trong cây T tìm một node X là tổ tiên của u,v và xa
+root của T nhất.
+-RMQ : Range minimum query
+- rmq(a,i,j) : return lại giá trị min/max trong range [i,j] trên mảng a
+- +-1 rmq : rmq trên mảng mà hiệu giữa hai phần tử liền kề bất kỳ 
+là +1 hoặc -1
+(*) Kết hợp RMQ & LCA trong các cuộc thi tin học
+Có thể kể đến các bài như POI 2002 hay bài Mountain trong Shanghai 2003...
+Do đó việc thông thạo RMQ & LCA rất quan trọng trong nghiên cứu và
+lập trình.
+
+2. GIẢI THUẬT
+Đến nay thì các công cuộc trong việc nghiên cứu bài toán rmq & lca đã được
+xem gần như là hoàn thành sau đây là một số thuật toán được sử dụng cùng với độ
+phức tạp để query của chúng.
+
+Mối quan hệ giữa RMQ và LCA
+Cho mảng A gồm N phần tử ta dựng một cây như sau :
+Giả sử phần tử nhỏ nhất trong dãy là Ak và node hiện
+tại là node Tk. Đối với left node, mình build
+trên đoạn A[1..k-1] và right node là A[k+1..N].
+Các bạn có thể thấy đây chính là Binary Heap.
+Ví dụ có mảng A[] = {7, 5, 8, 1, 10}
+Illustration needed here : 
+            1 (4)
+         /     \
+        5(2)       10 (5)
+      /   \
+     7(1)     8 (3)
+    Ký hiệu : V(x) - giá trị A[x] = V
+-Lấy 1 - phần tử min làm root
+-Phần bên phải chỉ có 1 node đó là 10
+-Subtree bên trái có 3 node 7,5,8
+-Lấy 5 làm root -> build đệ quy
+- -> 2 node 7,8 theo như quá trình trên
+Vậy ta đã build xong tree. Tiếp theo sẽ là gì ?
+Ứng dụng vào hàm rmq(A,i,j) đã đề cập ở trên 
+Giả sử min sequence = ak và k thuộc [i,j] thì ans = k
+Nếu k > j thì đáp án là rmq([1..k-1],i,j)
+Nếu k < i thì đáp án là rmq([k+1...N],i,j)
+Bạn có thể nhận thấy rằng thực ra : 
+RMQ(a,i,j) = LCA(t,i,j) (bạn đọc tự c/m).
+Điều này cho chúng ta thấy rằng bài toán RMQ có thể quy
+về LCA.
+
+Xử lý bài toán LCA :
+(tldr : Dựng Euler's tour tree - có thể tham khảo thêm
+ở trên cp-algorithms hay usaco guide).
+Giả sử chúng ta có một cây T.
+Chúng ta dfs trên cây và viết ra những node đã được thăm
+lần lượt build được 1 dãy với độ dài 2*N nó được gọi là
+Euler Sequence của T - ký hiệu F.
+Chúng ta sẽ lưu lại thời điểm đi vào node đối với mỗi
+node, gọi là pos(u).
+
+(Euler's Tour Tree illustration needed here).
+
+=> LCA(T,u,v) = RMQ(B,pos(u),pos(v))
+Trong đó B thực chất là F nhưng tại mỗi index chúng ta
+lưu lại depth của node.
+Để xử lý thì các bạn có thể dùng các cấu trúc dữ liệu
+chẳng hạn như segment tree hay sparse table,...
+TLDR How to solve RMQ - LCA:
+    RMQ (Segtree, Sparse table)
+            |
+    LCA, Tarjan,..
+            |
+        +- 1 RMQ
+3. ỨNG DỤNG
+Các bài toán về LCA & RMQ đóng một vai trò rất quan trọng
+trong công cuộc nghiên cứu khoa học máy tính. Nó thường xuất hiện
+dưới dạng một thuật toán kinh điển và những ý tưởng giải quyết vấn đề
+gần gũi, tự nhiên, thuần túy,...
+
+Problem 1 : Director of water management (Winter Camp 2006)
+Thành phố MY có một mạng lưới đường ống nước ngầm rất lớn.Tao
+là giám đốc quản lý đường ống nước ở thành phố MY.
+Công ty cấp nước có thể gửi một lượng nước từ điểm X đến điểm Y mỗi
+ngày. Tao cần tìm một tuyến đường ống nước từ A -> B để sau đó
+thông báo những đường ống trên tuyến đường sẵn sàng chuyển nước
+qua hệ thống, và sau đó đợi đến khi mọi ống trên path đều đã sẵn sàng
+thì công ty mới có thể cấp nước. Tao chỉ có thể thực hiện task cấp nước
+tại một thời điểm, và chỉ có thể thực hiện task tiếp theo sau khi task trước đó
+đã hoàn thành.
+Trước khi có thể thực hiện các task, các đường ống cần
+được bảo trì trước. Chúng bắt đầu bảo trì cùng 1 thời điểm
+Nhưng vì mỗi ống lại có kích thước khác nhau dẫn đến thời gian mỗi
+ống bảo trì cũng khác nhau.Tao cần tìm 1 con đường luân chuyển nước
+sao cho thời gian cần thiết là ngắn nhất. Thêm nữa, do đã sử dụng nhiều
+năm nên một số ống nước sẽ hỏng dần theo thời gian và không sự dụng được.
+------ 
+Additional notes:
+    -Critical edge : edge có trọng số max
+    -Path cost : Weight of key edge
+    -Shortest path : Path với minimum total weight
+    -Cho đồ thị vô hướng có trọng số G và Q truy vấn:
+    Type 1 : Xoá cạnh (u,v)
+    Type 2 : Tìm shortest path từ u đi đến v
+Constraints: 
+N - số node <= 1000
+M - số edge <= 1e5
+Q - số truy vấn <= 1e5
+D - số cạnh xóa <= 5000
+------
+Sol: Ở đây có thể nghĩ đến một thuật toán na ná với thuật toán Prim
+nhưng nó sẽ có độ phức tạp O(n^2) trên mỗi query do đó mà khó có thể 
+mà thỏa mãn giới hạn thời gian.
+Thế tại sao nó lại TLE ? 
+- Có nhiều cạnh
+- Độ phức tạp hoàn thành mỗi query quá lớn
+Chúng ta sẽ xử lý từng vấn đề lần lượt.Chúng ta sẽ bắt đầu với một số nhận xét
+sau:
+(*) Nhận xét 1 : Mọi query có thể tìm được giải pháp tối ưu ở trong minimum "spanning
+forest".
+    Chứng minh : Gọi Φ(P) là số edge ở trong path P mà không có trong T
+        Nếu Φ(P) = 0, thì P sẽ là 1 path trên T
+        Nếu Φ(P)> 0, thì có cạnh (u, v) ∈ P – T
+    Ví dụ, giả sử chúng ta có một cạnh (u,v) nọ.
+    Theo tính chất của minimum spanning forest, tồn tại một path P0
+    chỉ gồm các tree edges nối hai điểm u và v và cost của path P0
+    không lớn hơn weight của (u,v)
+    Khi đó nếu thay thế (u,v) bằng path P0 thì chi phí không tăng và
+    Φ(P) giảm.
+    Vì Φ(P) >= 0 do đó P có thể được chuyển thành một path trên T sau hữu hạn
+    bước thay thế như trên điều này chứng minh nhận xét trên.
+Từ nhận xét trên chúng ta chỉ cần lưu lại những tree edge => số cạnh giảm xuống
+N => thực hiện trong O(n) và query 1 thế là xong.
+
+Thế còn query 2 thì mình xử lý như thế nào ? 
+Để ý rằng con đường giữa 2 node trong minimum spanning forest là duy nhất.Chúng ta có để
+dfs để tìm critical edges của path trong o(n)
+Nhưng N <= 1000 và Q <= 1e5 => thuật toán này vẫn chưa thực sự tốt.
+
+Chúng ta cần tìm cạnh có trọng số max trên path nối 2 node. Mô tuýp bài kiểu như thế này
+có thể implement được bằng Dynamic Tree (Link-cut Tree) nhưng như thế hơi overkill 
+hay đơn giản là nó hơi phức tạp để implement.
+
+Để tìm ra được một thuật toán đơn giản và khả thi, chúng ta phải nắm được bản chất của 
+Minimum Spanning Forest. Và trong trường hợp này thì chúng ta có thể sử dụng thuật toán
+Kruskal. Nói sơ qua về thuật toán Kruskal
+(Illustration needed here)
+Chúng ta sẽ sử dụng thuật toán Kruskal để generate ra
+minimum spanning forrest của đồ thị trên chúng ta sẽ thêm các
+cạnh một cách tham lam theo weight của các edges.
+Qua đó chúng ta có nhận xét 2 : Critical edge của path (u,v) chính là cạnh 
+mà “connect” chúng với nhau trong thuật toán trên.
+
+Vậy chúng ta nên ứng dụng nhận xét trên như thế nào cho
+hợp lý ? Chúng ta sẽ build 1 cái "sequential" forest
+Mỗi lá trong sequential forest tương ứng với một node trong
+đồ thị ở trên. Node lá Vi sẽ tương ứng với node i ban đầu ở trên
+
+Khi tree edge Ei được thêm, 2 connected block được connect
+bằng edge này phải là 2 tree trong sequential forest.
+Chúng ta cũng sẽ lập các node mới tượng trưng cho các edge ví dụ
+node Ei sẽ tương ứng với edge Ei chẳng hạn khi đó left node và right node
+của node Ei sẽ là root của 2 cây ứng với 2 block nói ở trên (xem hình
+minh họa để hiểu rõ hơn). 
+Dễ thấy khi đó shortest path từ node u -> v thực chất chính là weight of LCA(u,v)
+trong sequential forest
+Và các bạn cũng có thể giải quyết bài toán bằng thuật toán Tarjan.
+Như vậy chúng ta có mạch code như sau :
+    1. Build MST và Sequential Forest
+    Build MST trong m log m
+    Build Euler's Tour Tree của SF trong 2n log 2n
+    Total O(m log m)
+    2. Xử lý query :
+    Để đơn giản hóa query xóa cạnh, chúng ta sẽ xử lý theo cách như sau:
+    Xây Minimum "Spanning Forest" mà không sử dụng các cạnh sẽ bị xóa.
+    Hoàn thành các query từ dưới lên tức từ Q về 1 ở mỗi query chúng ta
+    sẽ thêm edge bị xóa và build lại MST trong O(m) và build lại Euler's
+    Tour Tree của Sequential Forest trong O(n) cũng như là build lại Sparse
+    Table trong O(2n log 2n)
+    Còn query trả lời chúng ta có thể dễ dàng trả lời trong O(1);
+IV Tổng kết:
+Các bài toán RMQ&LCA đóng một vai trò quan trọng trong việc học thuật toán
+cũng như ứng dụng thực tiễn sau này.Khi giải bài cũng như nghiên cứu thuật toán, suy nghĩ theo hướng sử dụng 
+các bài toán cơ bản cũng như các thuật toán kinh điển sẽ giúp chúng ta cải thiện được kỹ năng giải quyết vấn đề!
+Đừng ngại nghĩ, chỉ có làm thì mới có ăn, bài tập trên cũng là một ví dụ điển hình như thế, mình khá chắc chắn
+rằng đa phần solution các bạn tìm được trên mạng sẽ sử dụng Link-cut Tree thay vì cách đơn giản như trên !
+
+V Luyện Tập:
+Các bạn có thể sub bài tại đây : https://www.luogu.com.cn/problem/P4172
+Một bài tập tương tự trên Atcoder : https://atcoder.jp/contests/JAG2013Spring/tasks/icpc2013spring_e
+Sẽ rất là có ích nếu bạn tham khảo thêm bài viết Second-best MST trên cp-algo
+Các bạn có thể tham khảo code của mình tại đây : thisiscaau/china-paper-archive (bao gồm cả solution của bài
+Atcoder)
+
