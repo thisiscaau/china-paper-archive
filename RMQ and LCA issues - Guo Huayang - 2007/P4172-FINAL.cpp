@@ -12,12 +12,17 @@ using namespace std;
 #define mp make_pair
 typedef pair<ll,ll> ii;
 typedef vector<ii> vii;
+#define debug(...) fprintf(stderr, __VA_ARGS__), fflush(stderr)
 /* constants */
 ll const inf = 1e9 + 7, MAXN = 1e6 + 5;
 /* declaration */
 ll n,m,q,idx;
 struct edge{
-    int u,v,w;  
+    int u,v,w;
+    // custom comp  
+    bool operator < (const edge& other) const{
+        return w < other.w;
+    }
 } e[MAXN],e1[MAXN];
 struct query{
     int k,u,v;
@@ -26,15 +31,13 @@ ll g[1001][1001];
 ll par[1001],fa[1001],rec[1001],sign[1001];
 ll res[MAXN];
 /* workspace */
-bool comp(edge a,edge b){
-    return a.w < b.w;
-}
 ll find(ll u){
     return par[u] == u ? u : find(par[u]);
 }
 signed main(){
     ios_base::sync_with_stdio(false);
     cin.tie(0);cout.tie(0);
+    //clock_t timer = clock();
     cin >> n >> m >> q;
     for (int i = 1 ; i <= m ; i++){
         cin >> e1[i].u >> e1[i].v >> e1[i].w;
@@ -48,7 +51,7 @@ signed main(){
         if (!cur) e[++idx] = e1[i];
         cur = g[e1[i].v][e1[i].u] = e1[i].w; // g array stores edge weight
     }
-    sort(e+1,e+1+idx,comp);
+    sort(e+1,e+1+idx);
     // initialize disjoint set union
     for (int i = 1 ; i <= n ; i++) par[i] = i;
     // kruskal
@@ -57,7 +60,7 @@ signed main(){
         ll fu = find(u), fv = find(v);
         if (fu == fv) continue;
         par[fu] = fv;
-        // rotate sequence
+        // rotate sequence and then join
         ll ff = fa[u], qq = u;
         while (ff){
             swap(fa[ff],qq);
@@ -69,9 +72,9 @@ signed main(){
     ll cnt = 0;
     for (int i = q ; i >= 1 ; i--){
         ll u = task[i].u , v = task[i].v, cur = u;
-        rec[cur] = 0;
-        while (cur){
-            sign[cur] = i; // marking query index
+        rec[cur] = 0; // maximum weight from u -> cur
+        while (cur){ // it is guaranteed that the graph is always connected
+            sign[cur] = i; // marking query index at ancestors
             rec[fa[cur]] = max(rec[cur],g[cur][fa[cur]]);
             cur = fa[cur];
         }
@@ -81,21 +84,29 @@ signed main(){
             mx = max(mx,g[lca][fa[lca]]);
             lca = fa[lca]; // going up
         }
-        ll ans = max(mx,rec[lca]);
+        ll ans = max(mx,rec[lca]); // get maximum weight
         if (task[i].k == 1){
             res[++cnt] = ans;
         }
         else {
             if (ans <= g[u][v]) continue;
-            if (ans > rec[lca]) swap(u,v);
-            // joining
+            // if g[u][v] >= ans then it's not a tree edge 
+            if (mx > rec[lca]) swap(u,v);
+            /* 
+            swap (u,v) without losing generality, we assume that
+            maximum weight on path u -> lca is larger than that of v -> lca
+            */
+            // joining u and v together
             ll ff = fa[u], qq = u;
-            while (ff){
+            while (g[qq][ff] != ans){
                 swap(fa[ff],qq);
                 swap(ff,qq);
             }
             fa[u] = v;
         }
+    } 
+    for (int i = cnt ; i >= 1 ; i--){
+        cout << res[i] << endl;
     }
-    for (int i = cnt ; i >= 1 ; i--) cout << res[i] << endl;
+    //debug("Total Time: %.3f\n", (double)(clock() - timer) / CLOCKS_PER_SEC);
 }
